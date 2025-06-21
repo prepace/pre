@@ -1,12 +1,12 @@
+// src/app/page.js
+import List from '../components/List'
+
 export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-24">
-      <h1 className="text-4xl font-bold">
-        Welcome to Pre
-      </h1>
-      <p className="mt-4 text-xl">
-        Filler Content
-      </p>
+      <div className="w-full max-w-md mt-8">
+        <List />
+      </div>
     </main>
   )
 }

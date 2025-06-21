@@ -1,4 +1,5 @@
 // src/app/layout.js
+import './globals.css';
 import { AuthProvider } from '@/lib/AuthProvider';
 import Navigation from '@/components/layout/Navigation';
 
@@ -9,7 +10,7 @@ export default function RootLayout({ children }) {
       <body>
         <AuthProvider>
           <Navigation />
-          <main>{children}</main>
+          <main className="min-h-screen bg-background text-foreground">{children}</main>
         </AuthProvider>
       </body>
     </html>
