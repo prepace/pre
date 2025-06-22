@@ -1,6 +1,6 @@
 // src/app/layout.js
 import { AuthProvider } from '@/lib/AuthProvider';
-import '../styles/globals.css';
+import './globals.css';
 import Navigation from '@/components/layout/Navigation';
 
 export default function RootLayout({ children }) {
