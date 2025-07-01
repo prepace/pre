@@ -1,142 +1,165 @@
-// components/category/id/Item.jsx
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
 
 export default function Item() {
   const { id } = useParams();
-  const [item, setItem] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [isPrivate, setIsPrivate] = useState(false);
-  const [notes, setNotes] = useState("");
 
+  const [item, setItem]       = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const [isPrivate, setIsPrivate] = useState(false);
+  const [savingPrivate, setSavingPrivate] = useState(false);
+
+  const [notes, setNotes] = useState('');
+
+  /* ──────────────────────────────────────────────── */
+  /*  Fetch item once                                 */
+  /* ──────────────────────────────────────────────── */
   useEffect(() => {
     async function fetchItem() {
       const { data, error } = await supabase
-        .from("items")
-        .select(`
-          *,
-          people (id, name)
-        `)
-        .eq("id", id)
+        .from('items')
+        .select(
+          `
+            *,
+            people (id, name)
+          `
+        )
+        .eq('id', id)
         .single();
-      if (error) console.error(error);
-      else setItem(data);
+
+      if (error) {
+        console.error(error);
+      } else {
+        setItem(data);
+        setIsPrivate(!!data.isPrivate); // initialise toggle
+      }
       setLoading(false);
     }
+
     fetchItem();
   }, [id]);
 
-  if (loading)
+  /* ──────────────────────────────────────────────── */
+  /*  Toggle “private”                                */
+  /* ──────────────────────────────────────────────── */
+  const handleTogglePrivate = async () => {
+  if (!item || savingPrivate) return;
+
+  const nextValue = !isPrivate;
+
+  // optimistic UI
+  setIsPrivate(nextValue);
+  setSavingPrivate(true);
+
+  const { data: updated, error } = await supabase
+    .from('items')
+    .update({ is_private: nextValue })   // DB column
+    .eq('id', item.id)
+    .select('*')
+    .single();                           // returns the updated row
+
+  if (error) {
+    console.error('Failed to update privacy flag:', error);
+    // rollback UI
+    setIsPrivate(!nextValue);
+  } else {
+    // keep local copy fully in sync
+    setItem(updated);
+  }
+
+  setSavingPrivate(false);
+};
+
+  /* ──────────────────────────────────────────────── */
+  /*  Early returns                                   */
+  /* ──────────────────────────────────────────────── */
+  if (loading) {
     return (
       <div className="flex h-screen items-center justify-center bg-gray-100">
-        <p className="text-gray-500 text-lg">Loading document...</p>
+        <p className="text-lg text-gray-500">Loading document…</p>
       </div>
     );
+  }
 
-  if (!item)
+  if (!item) {
     return (
       <div className="flex h-screen items-center justify-center bg-gray-100">
-        <p className="text-gray-500 text-lg">Item not found</p>
+        <p className="text-lg text-gray-500">Item not found</p>
       </div>
     );
+  }
 
-  const slug = item.name.toLowerCase().replace(/\s+/g, "-");
+  /* ──────────────────────────────────────────────── */
+  /*  Derived data                                    */
+  /* ──────────────────────────────────────────────── */
+  const slug = item.name.toLowerCase().replace(/\s+/g, '-');
   const paragraphs = item.extracted_text
     ? item.extracted_text.split(/\n\s*\n/)
     : [];
 
+  /* ──────────────────────────────────────────────── */
+  /*  Render                                          */
+  /* ──────────────────────────────────────────────── */
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col lg:flex-row">
+    <div className="flex flex-col lg:flex-row min-h-screen bg-gray-50">
       {/* Sidebar */}
-      <aside className="w-full lg:w-96 bg-gray-50 border-b lg:border-b-0 lg:border-r border-gray-200 overflow-y-auto px-4 sm:px-6 py-6">
+      <aside className="w-full lg:w-96 border-b lg:border-b-0 lg:border-r border-gray-200 bg-gray-50 overflow-y-auto px-4 sm:px-6 py-6">
         <div className="space-y-6">
           {/* Thumbnail */}
-          <div className="bg-white rounded-lg shadow p-4">
+          <div className="rounded-lg bg-white p-4 shadow">
             <img
               src={item.url}
               alt={item.name}
-              className="w-full h-auto object-contain rounded"
+              className="w-full rounded object-contain"
             />
           </div>
 
-          {/* Title/Slug */}
-          <div className="bg-white rounded-lg shadow p-4">
-            <div className="text-sm text-gray-500">Title</div>
-            <div className="mt-1 text-gray-800 font-medium break-all">{slug}</div>
+          {/* Title / Slug */}
+          <div className="rounded-lg bg-white p-4 shadow">
+            <p className="text-sm text-gray-500">Title</p>
+            <p className="mt-1 break-all font-medium text-gray-800">{slug}</p>
           </div>
 
           {/* Origin Date */}
-          <div className="bg-white rounded-lg shadow p-4">
+          <div className="rounded-lg bg-white p-4 shadow">
             <div className="flex justify-between text-sm text-gray-500">
               <span>Origin Date</span>
               <span>
-                {new Date(item.origin_date).toLocaleDateString("en-US")}{" "}
-                {new Date(item.origin_date).toLocaleTimeString("en-US", {
-                  hour: "numeric",
-                  minute: "2-digit",
+                {new Date(item.origin_date).toLocaleDateString('en-US')}{' '}
+                {new Date(item.origin_date).toLocaleTimeString('en-US', {
+                  hour: 'numeric',
+                  minute: '2-digit',
                   hour12: true,
                 })}
               </span>
             </div>
           </div>
 
-          {/* Expires */}
-          <div className="bg-white rounded-lg shadow p-4 flex items-center space-x-2">
-            <svg
-              className="w-5 h-5 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <title>Calendar Icon</title>
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
-            <svg
-              className="w-5 h-5 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <title>Clock Icon</title>
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <span className="text-sm text-gray-500">Expires on</span>
-          </div>
-
           {/* Private Toggle */}
-          <div className="bg-white rounded-lg shadow p-4">
+          <div className="rounded-lg bg-white p-4 shadow">
             {isPrivate && (
-              <div className="mb-2 p-2 bg-yellow-100 border border-yellow-300 rounded text-yellow-800 text-sm">
+              <div className="mb-2 rounded border border-yellow-300 bg-yellow-100 p-2 text-sm text-yellow-800">
                 Document is private. Only you can view it.
               </div>
             )}
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-500">Private</span>
               <button
-                type="button"
-                onClick={() => setIsPrivate(!isPrivate)}
-                className={`relative inline-flex flex-shrink-0 h-6 w-11 border-2 rounded-full transition-colors focus:outline-none ${
+                onClick={handleTogglePrivate}
+                disabled={savingPrivate}
+                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 transition-colors focus:outline-none ${
                   isPrivate
-                    ? "bg-green-500 border-green-500"
-                    : "bg-gray-200 border-gray-200"
-                }`}
+                    ? 'border-green-500 bg-green-500'
+                    : 'border-gray-200 bg-gray-200'
+                } ${savingPrivate && 'opacity-60'}`}
               >
                 <span
-                  className={`inline-block h-5 w-5 bg-white rounded-full shadow transform ring-0 transition-transform ${
-                    isPrivate ? "translate-x-5" : "translate-x-0"
+                  className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+                    isPrivate ? 'translate-x-5' : 'translate-x-0'
                   }`}
                 />
               </button>
@@ -144,30 +167,30 @@ export default function Item() {
           </div>
 
           {/* Status / Created / Updated */}
-          <div className="bg-gray-100 rounded-lg p-4 space-y-3">
+          <div className="rounded-lg bg-gray-100 p-4 space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-500">Status</span>
               <div className="flex items-center space-x-2">
-                <span className="h-2 w-2 bg-green-500 rounded-full" />
+                <span className="h-2 w-2 rounded-full bg-green-500" />
                 <span className="text-sm text-gray-800">Live</span>
               </div>
             </div>
             <div className="flex justify-between text-sm text-gray-800">
               <span>Created at</span>
-              <span>{new Date(item.created_at).toLocaleString("en-US")}</span>
+              <span>{new Date(item.created_at).toLocaleString('en-US')}</span>
             </div>
             <div className="flex justify-between text-sm text-gray-800">
               <span>Updated at</span>
-              <span>{new Date(item.created_at).toLocaleString("en-US")}</span>
+              <span>{new Date(item.updated_at).toLocaleString('en-US')}</span>
             </div>
           </div>
 
           {/* Notes */}
-          <div className="bg-white rounded-lg shadow p-4">
+          <div className="rounded-lg bg-white p-4 shadow">
             <textarea
               rows={4}
               placeholder="Notes about your changes"
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+              className="w-full resize-none rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
             />

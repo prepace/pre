@@ -1,64 +1,26 @@
 "use client";
 
-import { useAuth } from '@/lib/AuthProvider';
 import PreLogo from '../svg/PreLogo';
+import { FaBars } from 'react-icons/fa';
 
-const Header = () => {
-  const { user, userData, loading, signOut } = useAuth();
-
-  if (loading) {
-    return null; // You can replace this with a loading spinner or message
-  }
-
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-      // Optionally, you can add a redirect or notification here
-    } catch (error) {
-      console.error("Error during sign out:", error);
-    }
-  };
-
+const Header = ({ toggleSidebar }) => {
   return (
-    <nav className="bg-gray-800">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-22 items-center">
-          {/* Logo or brand name */}
-          <a href="/" className="text-xl font-bold text-blue-600 hover:text-blue-700">
-            {<PreLogo variant='both' />}
-          </a>
+    <nav className="bg-transparent px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      {/* Left: Hamburger Menu */}
+      <button
+        onClick={toggleSidebar}
+        className="text-black text-xl p-2 rounded hover:bg-gray-800 transition-all duration-300 focus:outline-none"
+      >
+        <FaBars />
+      </button>
 
-          {/* Navigation Links */}
-          <ul className="flex items-end space-x-6">
-
-            {user ? (
-              <>
-                <li className="text-gray-100 font-bold">
-                  Welcome, <span className="font-bold">{userData.first_name}</span>
-                </li>
-                <li>
-                  <button
-                    type="button"
-                    onClick={handleSignOut}
-                    className="bg-blue-600 text-white px-3 py-1.5 rounded-md hover:bg-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                  >
-                    Logout
-                  </button>
-                </li>
-              </>
-            ) : (
-              <li>
-                <a
-                  href="/login"
-                  className="text-gray-700 hover:text-blue-600 transition-colors duration-200"
-                >
-                  Login
-                </a>
-              </li>
-            )}
-          </ul>
-        </div>
-      </div>
+      {/* Right: Logo */}
+      <a
+        href="/"
+        className="ml-auto text-blue-500 hover:text-blue-400 font-bold transition-colors duration-300"
+      >
+        <PreLogo variant="both" />
+      </a>
     </nav>
   );
 };

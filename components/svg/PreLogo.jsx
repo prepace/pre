@@ -105,7 +105,7 @@ const PreLogo = ({ variant = "image" }) => {
 		</>
 	);
 
- const wordLogo = <img src="/logo/logo-word-w.svg" alt="Logo Word" className="w-24" />;
+ const wordLogo = <img src="/logo/logo-word.svg" alt="Logo Word" className="w-24" />;
 
   if (variant === "word") {
     return <div className="flex justify-center items-center">{wordLogo}</div>;
