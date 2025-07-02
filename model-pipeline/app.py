@@ -140,12 +140,20 @@ def apply_spacy_relations(G: nx.DiGraph, text: str, headers: dict):
             G.add_edge(signer, letter_id, relation="closing_signature")
 
 # ─── Main endpoint ────────────────────────────────────────────────────────────
+# In your app.py, update the /process endpoint:
 @app.post("/process", response_model=GraphResponse)
 def run_full_pipeline(req: NerRequest):
+    # Add logging
+    print(f"Received text: {req.text[:100]}...")  # First 100 chars
+
     raw = req.text
     headers = parse_headers(raw)
+    print(f"Parsed headers: {headers}")
+
     parts = raw.split("\n\n", 1)
     body = parts[1] if len(parts)>1 else ""
+    print(f"Body text: {body[:100]}...")
+
     G = nx.DiGraph()
 
     ingest_headers(G, headers)
@@ -153,6 +161,9 @@ def run_full_pipeline(req: NerRequest):
     apply_spacy_entities(G, body)
     apply_hf_ner(G, body)
     apply_spacy_relations(G, body, headers)
+
+    # Log graph stats
+    print(f"Graph has {G.number_of_nodes()} nodes and {G.number_of_edges()} edges")
 
     # Build node list with defaults
     nodes = []
@@ -167,4 +178,9 @@ def run_full_pipeline(req: NerRequest):
         rel = attrs.get("relation", "")
         edges.append(GraphEdge(source=src, target=dst, relation=rel))
 
+    print(f"Returning {len(nodes)} nodes and {len(edges)} edges")
     return GraphResponse(nodes=nodes, edges=edges)
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True, log_level="info")

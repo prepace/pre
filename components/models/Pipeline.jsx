@@ -8,8 +8,12 @@ export default function Pipeline() {
   const [graph,  setGraph]  = useState(null)
   const [loading,setLoading]= useState(false)
   const [error,  setError]  = useState(null)
+  const [useTestServer, setUseTestServer] = useState(process.env.NODE_ENV === 'development')
 
-  const URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/process'
+  // Toggle between production and development servers
+  const URL = useTestServer
+    ? process.env.NEXT_PUBLIC_NER_DEVELOPMENT_URL || 'http://localhost:8001/process'
+    : process.env.NEXT_PUBLIC_NER_URL || 'http://localhost:8000/process'
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -61,6 +65,31 @@ export default function Pipeline() {
   return (
     <div style={{ maxWidth: 800, margin: '2rem auto', fontFamily: 'sans-serif' }}>
       <h1>Letter Graph Pipeline</h1>
+
+      {/* Server toggle */}
+      <div style={{
+        marginBottom: '1rem',
+        padding: '0.5rem',
+        backgroundColor: '#f5f5f5',
+        borderRadius: '4px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '1rem'
+      }}>
+        <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+          <input
+            type="checkbox"
+            checked={useTestServer}
+            onChange={(e) => setUseTestServer(e.target.checked)}
+            style={{ marginRight: '0.5rem' }}
+          />
+          Use Testing Server
+        </label>
+        <span style={{ fontSize: '0.9em', color: '#666' }}>
+          Currently using: {useTestServer ? 'Testing Server (port 8001)' : 'Production Server (port 8000)'}
+        </span>
+      </div>
+
       <form onSubmit={handleSubmit}>
         <textarea
           rows={6}
@@ -82,7 +111,7 @@ export default function Pipeline() {
 
       {graph && (
         <>
-          <h2>Nodes</h2>
+          <h2>Nodes ({nodeRows.length})</h2>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr>
@@ -102,7 +131,7 @@ export default function Pipeline() {
             </tbody>
           </table>
 
-          <h2 style={{ marginTop: '2rem' }}>Edges</h2>
+          <h2 style={{ marginTop: '2rem' }}>Edges ({edgeRows.length})</h2>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr>
