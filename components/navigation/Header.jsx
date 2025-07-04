@@ -13,7 +13,9 @@ const Header = ({ toggleSidebar }) => {
       >
         <FaBars />
       </button>
-
+       <a href="/tree" className="text-blue-500 hover:text-blue-400 font-bold transition-colors duration-300">
+        Graph Tree
+      </a>
       {/* Right: Logo */}
       <a
         href="/"
@@ -21,6 +23,7 @@ const Header = ({ toggleSidebar }) => {
       >
         <PreLogo variant="both" />
       </a>
+
     </nav>
   );
 };
