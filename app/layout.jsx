@@ -1,41 +1,27 @@
-"use client";
-
-import { useState, useEffect } from 'react';
+// src/app/layout.jsx
+import './globals.css';
 import { AuthProvider } from '@/lib/AuthProvider';
 import Header from '@/components/navigation/Header';
 import Sidebar from '@/components/navigation/Sidebar';
-import './globals.css';
+
+export const metadata = {
+  title: 'Pre - Preservering Records for Everyone',
+  description: 'Preservering Records for Everyone',
+};
 
 export default function RootLayout({ children }) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-  // Close sidebar on escape key press
-  useEffect(() => {
-    const handleEscape = (e) => {
-      if (e.key === 'Escape') {
-        setIsSidebarOpen(false);
-      }
-    };
-
-    window.addEventListener('keydown', handleEscape);
-    return () => window.removeEventListener('keydown', handleEscape);
-  }, []);
-
   return (
     <html lang="en">
-      <body>
+      <body className="bg-background text-foreground font-sans">
         <AuthProvider>
-          <div className="relative min-h-screen">
-            <Header toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
-
-            <main className="pt-16 min-h-screen bg-background text-foreground p-6">
-              {children}
-            </main>
-
-            <Sidebar
-              isOpen={isSidebarOpen}
-              setIsOpen={setIsSidebarOpen}
-            />
+          <div className="flex min-h-screen">
+            <Sidebar />
+            <div className="flex-1 flex flex-col">
+              <Header />
+              <main className="pt-16 px-6">
+                {children}
+              </main>
+            </div>
           </div>
         </AuthProvider>
       </body>
